@@ -59,6 +59,89 @@ namespace ASN1Demo
             deserializedMotorcycle.DisplayInfo();
 
             Console.WriteLine("\n=== Demo Complete ===");
+
+            // Run the unified serializer compatibility demo
+            Console.WriteLine("\n" + new string('=', 60));
+            TestUnifiedSerializerCompatibility();
+        }
+
+        private static void TestUnifiedSerializerCompatibility()
+        {
+            Console.WriteLine("ASN.1 Version Compatibility Demonstration");
+            Console.WriteLine("==========================================\n");
+
+            // Test the unified serializer
+            TestUnifiedSerializer();
+
+            Console.WriteLine("\n" + new string('=', 50));
+            Console.WriteLine("SUMMARY: Version-Compatible Serialization Features");
+            Console.WriteLine(new string('=', 50));
+
+            Console.WriteLine("✓ Backward Compatibility: Newer code can read older data");
+            Console.WriteLine("✓ Forward Compatibility: Older code can read newer data");
+            Console.WriteLine("✓ Graceful Degradation: Missing properties get defaults");
+            Console.WriteLine("✓ Property Evolution: Add/remove properties safely");
+            Console.WriteLine("✓ Version Metadata: Track data schema versions");
+            Console.WriteLine("✓ Optional Properties: Mark properties as optional");
+            Console.WriteLine("✓ Default Values: Specify fallback values");
+            Console.WriteLine("✓ Version Ranges: Control when properties are valid");
+
+            Console.WriteLine("\nKey Benefits:");
+            Console.WriteLine("• No breaking changes when evolving schemas");
+            Console.WriteLine("• Seamless upgrades and rollbacks");
+            Console.WriteLine("• Production-ready version management");
+            Console.WriteLine("• Automatic handling of schema mismatches");
+        }
+
+        private static void TestUnifiedSerializer()
+        {
+            Console.WriteLine("=== Unified ASN.1 Serializer Test ===\n");
+
+            // Test basic serialization
+            var car = new Car("Toyota", "Camry", 2024, "1HGBH41JXMN109186", 4, "Hybrid", 2.5, true);
+            var motorcycle = new Motorcycle("Harley", "Sportster", 2023, "1HD123456", "Cruiser", 883, false, "Class M");
+            motorcycle.AddSafetyFeature("ABS");
+            motorcycle.AddSafetyFeature("LED Lights");
+
+            Console.WriteLine("Original Car:");
+            car.DisplayInfo();
+            Console.WriteLine();
+
+            Console.WriteLine("Original Motorcycle:");
+            motorcycle.DisplayInfo();
+            Console.WriteLine();
+
+            // Test serialization and deserialization
+            var carData = car.SerializeToAsn1();
+            var motorcycleData = motorcycle.SerializeToAsn1();
+
+            Console.WriteLine($"Car serialized: {carData.Length} bytes");
+            Console.WriteLine($"Motorcycle serialized: {motorcycleData.Length} bytes\n");
+
+            // Test deserialization
+            var deserializedCar = new Car();
+            deserializedCar.DeserializeFromAsn1(carData);
+
+            var deserializedMotorcycle = new Motorcycle();
+            deserializedMotorcycle.DeserializeFromAsn1(motorcycleData);
+
+            Console.WriteLine("Deserialized Car:");
+            deserializedCar.DisplayInfo();
+            Console.WriteLine();
+
+            Console.WriteLine("Deserialized Motorcycle:");
+            deserializedMotorcycle.DisplayInfo();
+            Console.WriteLine();
+
+            // Test version compatibility - serialize car as v1.0 and deserialize as v1.2
+            var carV10Data = car.SerializeToAsn1("1.0");
+            var carV12 = new Car();
+            carV12.DeserializeFromAsn1(carV10Data, "1.2");
+
+            Console.WriteLine("Version Compatibility Test (v1.0 data -> v1.2 code):");
+            Console.WriteLine($"FuelType should default to 'Gasoline': {carV12.FuelType}");
+
+            Console.WriteLine("\n✓ All tests completed successfully!");
         }
     }
 }

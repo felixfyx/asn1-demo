@@ -5,11 +5,20 @@ using System.Text;
 
 namespace ASN1Demo
 {
+    /*
+    Serializable is for classes, Property is for variables with getters/setters
+    within a class.
+    */
+    [Asn1Serializable(Version = "1.0")]
     public abstract class Vehicle
     {
+        [Asn1Property(0)]
         public string Manufacturer { get; set; }
+        [Asn1Property(1)]
         public string Model { get; set; }
+        [Asn1Property(2)]
         public int Year { get; set; }
+        [Asn1Property(3)]
         public string VIN { get; set; }
 
         protected Vehicle()
@@ -29,8 +38,35 @@ namespace ASN1Demo
 
         public abstract void StartEngine();
         public abstract double CalculateFuelEfficiency();
-        public abstract byte[] SerializeToAsn1();
-        public abstract void DeserializeFromAsn1(byte[] data);
+        public virtual byte[] SerializeToAsn1(string? targetVersion = null)
+        {
+            return Asn1Serializer.Serialize(this, targetVersion);
+        }
+
+        public virtual void DeserializeFromAsn1(byte[] data, string? expectedVersion = null)
+        {
+            var method = typeof(Asn1Serializer).GetMethod("Deserialize")?.MakeGenericMethod(this.GetType());
+            var deserialized = method?.Invoke(null, new object[] { data, expectedVersion! });
+            if (deserialized != null)
+            {
+                CopyPropertiesFrom(deserialized);
+            }
+        }
+
+        protected virtual void CopyPropertiesFrom(object source)
+        {
+            var sourceType = source.GetType();
+            var targetType = this.GetType();
+
+            foreach (var prop in sourceType.GetProperties())
+            {
+                var targetProp = targetType.GetProperty(prop.Name);
+                if (targetProp?.CanWrite == true)
+                {
+                    targetProp.SetValue(this, prop.GetValue(source));
+                }
+            }
+        }
 
         public virtual void DisplayInfo()
         {
@@ -39,11 +75,16 @@ namespace ASN1Demo
         }
     }
 
+    [Asn1Serializable(Version = "1.2")]
     public class Car : Vehicle
     {
+        [Asn1Property(4)]
         public int NumberOfDoors { get; set; }
+        [Asn1Property(5, Optional = true, DefaultValue = "Gasoline", SinceVersion = "1.1")]
         public string FuelType { get; set; }
+        [Asn1Property(6)]
         public double EngineSize { get; set; }
+        [Asn1Property(7)]
         public bool HasSunroof { get; set; }
 
         public Car() : base()
@@ -82,47 +123,20 @@ namespace ASN1Demo
             Console.WriteLine($"Fuel Efficiency: {CalculateFuelEfficiency():F1} MPG");
         }
 
-        public override byte[] SerializeToAsn1()
-        {
-            var writer = new AsnWriter(AsnEncodingRules.DER);
-
-            using (writer.PushSequence())
-            {
-                writer.WriteCharacterString(UniversalTagNumber.UTF8String, Manufacturer);
-                writer.WriteCharacterString(UniversalTagNumber.UTF8String, Model);
-                writer.WriteInteger(Year);
-                writer.WriteCharacterString(UniversalTagNumber.UTF8String, VIN);
-                writer.WriteInteger(NumberOfDoors);
-                writer.WriteCharacterString(UniversalTagNumber.UTF8String, FuelType);
-                writer.WriteCharacterString(UniversalTagNumber.UTF8String, EngineSize.ToString());
-                writer.WriteBoolean(HasSunroof);
-            }
-
-            return writer.Encode();
-        }
-
-        public override void DeserializeFromAsn1(byte[] data)
-        {
-            var reader = new AsnReader(data, AsnEncodingRules.DER);
-
-            var sequence = reader.ReadSequence();
-            Manufacturer = sequence.ReadCharacterString(UniversalTagNumber.UTF8String);
-            Model = sequence.ReadCharacterString(UniversalTagNumber.UTF8String);
-            Year = (int)sequence.ReadInteger();
-            VIN = sequence.ReadCharacterString(UniversalTagNumber.UTF8String);
-            NumberOfDoors = (int)sequence.ReadInteger();
-            FuelType = sequence.ReadCharacterString(UniversalTagNumber.UTF8String);
-            EngineSize = double.Parse(sequence.ReadCharacterString(UniversalTagNumber.UTF8String));
-            HasSunroof = sequence.ReadBoolean();
-        }
     }
 
+    [Asn1Serializable(Version = "1.0")]
     public class Motorcycle : Vehicle
     {
+        [Asn1Property(4)]
         public string BikeType { get; set; }
+        [Asn1Property(5)]
         public int EngineCC { get; set; }
+        [Asn1Property(6)]
         public bool HasSidecar { get; set; }
+        [Asn1Property(7)]
         public string LicenseClass { get; set; }
+        [Asn1Property(8)]
         public List<string> SafetyFeatures { get; set; }
 
         public Motorcycle() : base()
@@ -174,53 +188,5 @@ namespace ASN1Demo
             }
         }
 
-        public override byte[] SerializeToAsn1()
-        {
-            var writer = new AsnWriter(AsnEncodingRules.DER);
-
-            using (writer.PushSequence())
-            {
-                writer.WriteCharacterString(UniversalTagNumber.UTF8String, Manufacturer);
-                writer.WriteCharacterString(UniversalTagNumber.UTF8String, Model);
-                writer.WriteInteger(Year);
-                writer.WriteCharacterString(UniversalTagNumber.UTF8String, VIN);
-                writer.WriteCharacterString(UniversalTagNumber.UTF8String, BikeType);
-                writer.WriteInteger(EngineCC);
-                writer.WriteBoolean(HasSidecar);
-                writer.WriteCharacterString(UniversalTagNumber.UTF8String, LicenseClass);
-
-                using (writer.PushSequence())
-                {
-                    foreach (var feature in SafetyFeatures)
-                    {
-                        writer.WriteCharacterString(UniversalTagNumber.UTF8String, feature);
-                    }
-                }
-            }
-
-            return writer.Encode();
-        }
-
-        public override void DeserializeFromAsn1(byte[] data)
-        {
-            var reader = new AsnReader(data, AsnEncodingRules.DER);
-
-            var sequence = reader.ReadSequence();
-            Manufacturer = sequence.ReadCharacterString(UniversalTagNumber.UTF8String);
-            Model = sequence.ReadCharacterString(UniversalTagNumber.UTF8String);
-            Year = (int)sequence.ReadInteger();
-            VIN = sequence.ReadCharacterString(UniversalTagNumber.UTF8String);
-            BikeType = sequence.ReadCharacterString(UniversalTagNumber.UTF8String);
-            EngineCC = (int)sequence.ReadInteger();
-            HasSidecar = sequence.ReadBoolean();
-            LicenseClass = sequence.ReadCharacterString(UniversalTagNumber.UTF8String);
-
-            var featuresSequence = sequence.ReadSequence();
-            SafetyFeatures = new List<string>();
-            while (featuresSequence.HasData)
-            {
-                SafetyFeatures.Add(featuresSequence.ReadCharacterString(UniversalTagNumber.UTF8String));
-            }
-        }
     }
 }
