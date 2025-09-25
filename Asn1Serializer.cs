@@ -260,6 +260,12 @@ namespace ASN1Demo
             {
                 writer.WriteCharacterString(tagNumber, ((DateTime)value).ToString("O"));
             }
+            else if (propType.IsEnum)
+            {
+                // Serialize enum as its underlying integer value
+                var underlyingValue = Convert.ToInt64(value);
+                writer.WriteInteger(underlyingValue);
+            }
             else if (typeof(IEnumerable).IsAssignableFrom(propType) && propType != typeof(string))
             {
                 SerializeCollection(writer, (IEnumerable)value, propType);
@@ -302,6 +308,12 @@ namespace ASN1Demo
                         else if (itemType == typeof(bool))
                         {
                             writer.WriteBoolean((bool)item);
+                        }
+                        else if (itemType.IsEnum)
+                        {
+                            // Serialize enum as its underlying integer value
+                            var underlyingValue = Convert.ToInt64(item);
+                            writer.WriteInteger(underlyingValue);
                         }
                         else
                         {
@@ -360,6 +372,14 @@ namespace ASN1Demo
             {
                 var str = reader.ReadCharacterString(UniversalTagNumber.UTF8String);
                 return DateTime.Parse(str);
+            }
+            else if (propType.IsEnum)
+            {
+                // Deserialize enum from its underlying integer value
+                var longValue = reader.ReadInteger();
+                // Convert to int for most common enum underlying type
+                var intValue = (int)longValue;
+                return Enum.ToObject(propType, intValue);
             }
             else if (typeof(IEnumerable).IsAssignableFrom(propType) && propType != typeof(string))
             {
@@ -425,6 +445,14 @@ namespace ASN1Demo
             else if (itemType == typeof(bool))
             {
                 return reader.ReadBoolean();
+            }
+            else if (itemType.IsEnum)
+            {
+                // Deserialize enum from its underlying integer value
+                var longValue = reader.ReadInteger();
+                // Convert to int for most common enum underlying type
+                var intValue = (int)longValue;
+                return Enum.ToObject(itemType, intValue);
             }
             else if (itemType.IsClass)
             {
@@ -602,6 +630,41 @@ namespace ASN1Demo
         private static UniversalTagNumber GetDefaultTag(Type type)
         {
             return TypeToTagMap.TryGetValue(type, out var tag) ? tag : UniversalTagNumber.UTF8String;
+        }
+
+        /// <summary>
+        /// Utility method to serialize any object to ASN.1 format
+        /// </summary>
+        public static byte[] SerializeToAsn1<T>(T obj, string? targetVersion = null) where T : class
+        {
+            return Serialize(obj, targetVersion);
+        }
+
+        /// <summary>
+        /// Utility method to deserialize ASN.1 data and update an existing object's properties
+        /// </summary>
+        public static void DeserializeFromAsn1<T>(T targetObject, byte[] data, string? expectedVersion = null) where T : class, new()
+        {
+            var deserializedObject = Deserialize<T>(data, expectedVersion);
+            CopyPropertiesFrom(targetObject, deserializedObject);
+        }
+
+        /// <summary>
+        /// Utility method to copy properties from source object to target object using reflection
+        /// </summary>
+        public static void CopyPropertiesFrom<T>(T target, object source) where T : class
+        {
+            var sourceType = source.GetType();
+            var targetType = target.GetType();
+
+            foreach (var prop in sourceType.GetProperties())
+            {
+                var targetProp = targetType.GetProperty(prop.Name);
+                if (targetProp?.CanWrite == true)
+                {
+                    targetProp.SetValue(target, prop.GetValue(source));
+                }
+            }
         }
     }
 }

@@ -38,35 +38,6 @@ namespace ASN1Demo
 
         public abstract void StartEngine();
         public abstract double CalculateFuelEfficiency();
-        public virtual byte[] SerializeToAsn1(string? targetVersion = null)
-        {
-            return Asn1Serializer.Serialize(this, targetVersion);
-        }
-
-        public virtual void DeserializeFromAsn1(byte[] data, string? expectedVersion = null)
-        {
-            var method = typeof(Asn1Serializer).GetMethod("Deserialize")?.MakeGenericMethod(this.GetType());
-            var deserialized = method?.Invoke(null, new object[] { data, expectedVersion! });
-            if (deserialized != null)
-            {
-                CopyPropertiesFrom(deserialized);
-            }
-        }
-
-        protected virtual void CopyPropertiesFrom(object source)
-        {
-            var sourceType = source.GetType();
-            var targetType = this.GetType();
-
-            foreach (var prop in sourceType.GetProperties())
-            {
-                var targetProp = targetType.GetProperty(prop.Name);
-                if (targetProp?.CanWrite == true)
-                {
-                    targetProp.SetValue(this, prop.GetValue(source));
-                }
-            }
-        }
 
         public virtual void DisplayInfo()
         {

@@ -6,6 +6,16 @@ namespace ASN1Demo
     {
         static void Main(string[] args)
         {
+            Console.WriteLine("Test 0: Basic load/save");
+            AgencyTest.Test0();
+            Console.WriteLine("Test 1: Using old class with 5 variables in a class with 6 variables");
+            AgencyTest.Test1();
+            Console.WriteLine("Test 2: Same as Test 1 but different order of variables");
+            AgencyTest.Test2();
+        }
+
+        private static void VehicleTests()
+        {
             Console.WriteLine("=== ASN.1 Vehicle Inheritance Demo ===\n");
 
             // Create a car
@@ -35,26 +45,26 @@ namespace ASN1Demo
 
             // Serialize car to ASN.1
             Console.WriteLine("Serializing car to ASN.1 format...");
-            byte[] carAsn1Data = car.SerializeToAsn1();
+            byte[] carAsn1Data = Asn1Serializer.SerializeToAsn1(car);
             Console.WriteLine($"Car serialized to {carAsn1Data.Length} bytes");
 
             // Deserialize car from ASN.1
             Console.WriteLine("Deserializing car from ASN.1 format...");
             var deserializedCar = new Car();
-            deserializedCar.DeserializeFromAsn1(carAsn1Data);
+            Asn1Serializer.DeserializeFromAsn1(deserializedCar, carAsn1Data);
             Console.WriteLine("Deserialized car:");
             deserializedCar.DisplayInfo();
             Console.WriteLine();
 
             // Serialize motorcycle to ASN.1
             Console.WriteLine("Serializing motorcycle to ASN.1 format...");
-            byte[] motorcycleAsn1Data = motorcycle.SerializeToAsn1();
+            byte[] motorcycleAsn1Data = Asn1Serializer.SerializeToAsn1(motorcycle);
             Console.WriteLine($"Motorcycle serialized to {motorcycleAsn1Data.Length} bytes");
 
             // Deserialize motorcycle from ASN.1
             Console.WriteLine("Deserializing motorcycle from ASN.1 format...");
             var deserializedMotorcycle = new Motorcycle();
-            deserializedMotorcycle.DeserializeFromAsn1(motorcycleAsn1Data);
+            Asn1Serializer.DeserializeFromAsn1(deserializedMotorcycle, motorcycleAsn1Data);
             Console.WriteLine("Deserialized motorcycle:");
             deserializedMotorcycle.DisplayInfo();
 
@@ -112,18 +122,18 @@ namespace ASN1Demo
             Console.WriteLine();
 
             // Test serialization and deserialization
-            var carData = car.SerializeToAsn1();
-            var motorcycleData = motorcycle.SerializeToAsn1();
+            var carData = Asn1Serializer.SerializeToAsn1(car);
+            var motorcycleData = Asn1Serializer.SerializeToAsn1(motorcycle);
 
             Console.WriteLine($"Car serialized: {carData.Length} bytes");
             Console.WriteLine($"Motorcycle serialized: {motorcycleData.Length} bytes\n");
 
             // Test deserialization
             var deserializedCar = new Car();
-            deserializedCar.DeserializeFromAsn1(carData);
+            Asn1Serializer.DeserializeFromAsn1(deserializedCar, carData);
 
             var deserializedMotorcycle = new Motorcycle();
-            deserializedMotorcycle.DeserializeFromAsn1(motorcycleData);
+            Asn1Serializer.DeserializeFromAsn1(deserializedMotorcycle, motorcycleData);
 
             Console.WriteLine("Deserialized Car:");
             deserializedCar.DisplayInfo();
@@ -134,9 +144,9 @@ namespace ASN1Demo
             Console.WriteLine();
 
             // Test version compatibility - serialize car as v1.0 and deserialize as v1.2
-            var carV10Data = car.SerializeToAsn1("1.0");
+            var carV10Data = Asn1Serializer.SerializeToAsn1(car, "1.0");
             var carV12 = new Car();
-            carV12.DeserializeFromAsn1(carV10Data, "1.2");
+            Asn1Serializer.DeserializeFromAsn1(carV12, carV10Data, "1.2");
 
             Console.WriteLine("Version Compatibility Test (v1.0 data -> v1.2 code):");
             Console.WriteLine($"FuelType should default to 'Gasoline': {carV12.FuelType}");
