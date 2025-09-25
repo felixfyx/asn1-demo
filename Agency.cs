@@ -116,4 +116,26 @@ namespace ASN1Demo
         }
     }
 
+    // For testing reordered data
+    [Asn1Serializable(Version = "1.0")]
+    public class LawAgency : Agency
+    {
+        [Asn1Property(3)]
+        public string Country { get; set; }
+        [Asn1Property(4)]
+        public List<string> Operations { get; set; }
+
+        public LawAgency() : base()
+        {
+            Operations = new List<string>();
+            Country = string.Empty;
+        }
+
+        public LawAgency(string agencyName, ConfidentialityLevel confidentiality, string country)
+            : base(agencyName, confidentiality)
+        {
+            Operations = new List<string>();
+            Country = country;
+        }
+    }
 }

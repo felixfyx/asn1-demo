@@ -62,5 +62,21 @@ namespace ASN1Demo
             Console.WriteLine($"Loaded Country: {intelTest2Loaded.Country}");
             Console.WriteLine($"Loaded Budget: {intelTest2Loaded.BudgetInMillions} million (should be default 0)");
         }
+
+        // Test 3: Load data with different orders of variables
+        public static void Test3()
+        {
+            // Test 3: Load data from Test 0 (v1.0) into another class with different order of variables.
+            // These are results from the first test. 
+            byte[] data = { 0x30, 0x49, 0x0C, 0x03, 0x31, 0x2E, 0x30, 0x0C, 0x1B, 0x41, 0x53, 0x4E, 0x31, 0x44, 0x65, 0x6D, 0x6F, 0x2E, 0x49, 0x6E, 0x74, 0x65, 0x6C, 0x6C, 0x69, 0x67, 0x65, 0x6E, 0x63, 0x65, 0x41, 0x67, 0x65, 0x6E, 0x63, 0x79, 0x0C, 0x03, 0x43, 0x49, 0x41, 0x02, 0x01, 0x03, 0x30, 0x09, 0x0C, 0x07, 0x41, 0x67, 0x65, 0x6E, 0x74, 0x20, 0x41, 0x30, 0x0D, 0x0C, 0x0B, 0x4F, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6F, 0x6E, 0x20, 0x58, 0x0C, 0x03, 0x55, 0x53, 0x41 };
+
+            var lawTest3Loaded = new LawAgency();
+            Asn1Serializer.DeserializeFromAsn1(lawTest3Loaded, data);
+            Console.WriteLine($"Loaded Agency Name: {lawTest3Loaded.AgencyName}");
+            Console.WriteLine($"Loaded Confidentiality: {lawTest3Loaded.Confidentiality}");
+            Console.WriteLine($"Loaded Agents: {string.Join(", ", lawTest3Loaded.Agents)}");
+            Console.WriteLine($"Loaded Country: {lawTest3Loaded.Country}");
+            Console.WriteLine($"Loaded Cases: {string.Join(", ", lawTest3Loaded.Operations)} (should be empty)"); // Operations is now Cases
+        }
     }
 }
