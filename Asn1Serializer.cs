@@ -19,7 +19,10 @@ namespace ASN1Demo
         public UniversalTagNumber? TagNumber { get; set; }
 
         // Version compatibility features
-        public bool Optional { get; set; } = false;
+
+        // Set default to true so that you won't crash easily unless
+        // you explicitly want to make a property mandatory.
+        public bool Optional { get; set; } = true;
         public object? DefaultValue { get; set; }
         public string? SinceVersion { get; set; }
         public string? RemovedInVersion { get; set; }
