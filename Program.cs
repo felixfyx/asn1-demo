@@ -12,9 +12,9 @@ namespace ASN1Demo
             AgencyTest.Test1();
             Console.WriteLine("Test 2: Same as Test 1 but different order of variables");
             AgencyTest.Test2();
-            // TODO: Fails because different order and both are not optional
-            // Console.WriteLine("Test 3");
-            // AgencyTest.Test3();
+            // TODO: Fails because different order
+            Console.WriteLine("Test 3");
+            AgencyTest.Test3();
         }
 
         private static void VehicleTests()
